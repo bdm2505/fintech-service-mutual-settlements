@@ -5,7 +5,7 @@ case class Price(name: String, cost: Double)
 case class Client(name: String, email: String, props: String)
 
 
-class Api(val check: List[Price]) {
+class Api(val check: Seq[Price]) {
 
   var paidClient: Option[Client] = None
   var clients: Map[Client, List[Price]] = Map.empty
@@ -31,7 +31,7 @@ object Api extends App {
   val bob = Client("Bob", "bob@tinkoff.ru", "8-123-0403003")
   val jon = Client("Jon", "jon@tinkoff.ru", "8-123-0403004")
 
-  val check = List(Price("молоко", 35.99), Price("суп", 120.99), Price("картошка", 67.99))
+  val check = Parser.checkParseFromFile("checks/check1.csv")
   val api = new Api(check)
 
   api.paid(pit)
