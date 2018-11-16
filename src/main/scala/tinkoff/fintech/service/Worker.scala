@@ -1,35 +1,56 @@
 package tinkoff.fintech.service
 
-class Worker(val storage: Storage, val emailSender: EmailSender) {
-  var clients: Set[Client] = Set.empty
-  var check = Check()
+import tinkoff.fintech.service.IDCreator.ID
 
-  def findClient(name: String)(fun: Client => Unit): Unit =
-    clients.find(_.name == name).foreach(fun)
+import scala.collection.immutable
+import scala.concurrent.{ExecutionContext, Future}
 
-  def work(command: Command): Unit = command match {
-    case AddProduct(product) =>
-      check += product
-    case AddClient(client) =>
-      clients += client
-    case RemoveProduct(name) =>
-      check -= name
-    case ConnectClientToProduct(client, product) =>
-      findClient(client) {
-        check.connect(product, _)
-      }
-    case GetProducts(name, handler) =>
-      findClient(name) {
-        check.products(_).foreach(handler)
-      }
-    case Calculate(paidClientName) =>
-      findClient(paidClientName) { paidClient =>
-        clients.filter(_ != paidClient).foreach{ client =>
-          check.products(client).foreach{ seq =>
-            emailSender.send(client.email, paidClient.props, seq)
-          }
-        }
-      }
+class Worker(val storage: Storage, val emailSender: EmailSender)(implicit ec: ExecutionContext) {
+
+
+  def work(request: Request): Future[Response] = request match {
+    case AddProducts(id, products) =>
+      for {
+        check <- storage.findCheck(id)
+        updateCheck = check.add(products)
+        _ <- storage.save(id, updateCheck)
+      } yield Ok
+
+    case CreateCheck(products) =>
+      val id = IDCreator.next
+      storage.save(id, Check(products)).map(_ => OkCreate(id))
+
+    case CreateClient(client) =>
+      val id = IDCreator.next
+      for {
+        _ <- storage.save(id, client)
+      } yield OkCreate(id)
+
+    case CreateCoupling(clientId, checkId, name) =>
+      for {
+        coup <- storage.findCoupling(checkId)
+        nm = name :: coup.names.getOrElse(clientId, Nil)
+        _ <- storage.updateCoupling(checkId, coup.copy(names = coup.names + (clientId -> nm)))
+      } yield Ok
+
+    case Calculate(paidClientId, checkId) =>
+      for {
+        check <- storage.findCheck(checkId)
+        coup <- storage.findCoupling(checkId)
+        listClients <- Future.sequence(coup.names.map { case (k, v) =>
+            for {
+              client <- storage.findClient(k)
+              list = v.map(check.find).filter(_.isDefined).map(_.get)
+            } yield (client, list)
+          })
+        paid <- storage.findClient(paidClientId)
+        _ <- Future.sequence(for {
+          (client, list) <- listClients if client != paid
+        } yield emailSender.send(client.email, paid.props, list))
+
+      } yield Ok
+
+
     case _ => ???
   }
 

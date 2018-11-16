@@ -1,32 +1,31 @@
 package tinkoff.fintech.service
 
 
-trait Check {
-  def add(product: Product): Unit
+case class Check(products: Seq[Product] = Seq.empty) {
 
-  def remove(name: String): Unit
+  def add(ps: Seq[Product]): Check =
+    copy(products ++ ps)
 
-  def connect(name: String, client: Client)
+  def remove(names: Seq[String]): Check =
+    copy(products.filterNot(p => names.contains(p.name)))
 
-  def products: Seq[Product]
+  def find(name: String): Option[Product] =
+    products.find(_.name == name)
 
-  def products(client: Client): Option[Seq[Product]]
+  def +(products: Product*): Check =
+    add(products)
 
-  def +=(product: Product): Unit =
-    add(product)
+  def -(names: String*): Check =
+    remove(names)
 
-  def -=(name: String): Unit =
-    remove(name)
+  def ++(ps: Seq[Product]): Check =
+    add(ps)
 
-  def ++=(ps: Seq[Product]): Unit =
-    ps.foreach(add)
+  def --(ps: Seq[String]): Check =
+    remove(ps)
 
-  def --=(ps: Seq[String]): Unit =
-    ps.foreach(remove)
 }
 
-object Check {
-  def apply(): Check = new MapCheck
-}
+
 
 

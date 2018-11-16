@@ -3,5 +3,5 @@ package tinkoff.fintech.service
 
 
 trait CommandReader {
-  def nextCommand: Command
+  def nextRequest: Request
 }
