@@ -1,4 +1,3 @@
-package tinkoff.fintech.service
-
+package tinkoff.fintech.service.data
 
 case class Product(name: String, cost: Double)

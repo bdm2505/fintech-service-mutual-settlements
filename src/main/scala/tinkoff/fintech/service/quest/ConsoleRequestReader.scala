@@ -1,9 +1,10 @@
-package tinkoff.fintech.service
+package tinkoff.fintech.service.quest
 
+import tinkoff.fintech.service.data.{Client, ID, Product}
 
 import scala.io.StdIn
 
-class ConsoleCommandReader extends CommandReader {
+class ConsoleRequestReader extends RequestReader {
 
 
   val help: String =
@@ -11,7 +12,7 @@ class ConsoleCommandReader extends CommandReader {
         |create [] - created empty check
         |add [id, product-name, product-cost]
         |client [name, email, props]
-        |connect [id-client, id-check, name-product]
+        |connect [id-check, id-client, name-product]
         |paid [id-paid-client, id-check]
         |exit []
       """.stripMargin
@@ -21,15 +22,15 @@ class ConsoleCommandReader extends CommandReader {
     try {
       args(0) match {
         case "add" =>
-          AddProducts(args(1),  Seq(Product(args(2), args(3).toDouble)))
+          AddProducts(ID(args(1)),  Seq(Product(args(2), args(3).toDouble)))
         case "create" =>
           CreateCheck(Seq.empty)
         case "client" =>
           CreateClient(Client(args(1), args(2), args(3)))
         case "connect" =>
-          CreateCoupling(args(1), args(2), args(3))
+          Connect(ID(args(1)), ID(args(2)), args(3))
         case "paid" =>
-          Calculate(args(1), args(2))
+          Calculate(ID(args(1)), ID(args(2)))
         case "exit" =>
           System.exit(0)
           nextRequest

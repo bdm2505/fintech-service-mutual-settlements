@@ -1,11 +1,15 @@
 package tinkoff.fintech.service
 
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext
+import tinkoff.fintech.service.data.Product
+import tinkoff.fintech.service.email.EmailSender
+import tinkoff.fintech.service.quest.ConsoleRequestReader
+import tinkoff.fintech.service.storage.TrieMapStorage
+
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 
 object ConsoleApi extends App {
-  val storage = Storage()
-  implicit val ec = ExecutionContext.global
+  val storage = new TrieMapStorage
+  import storage.ec
 
   val emailSender = new EmailSender {
     override def send(email: String, props: String, products: Seq[Product]) = Future {
@@ -14,11 +18,15 @@ object ConsoleApi extends App {
   }
 
   val worker = new Worker(storage, emailSender)
-  val reader = new ConsoleCommandReader
+  val reader = new ConsoleRequestReader
   println(reader.help)
   while (true) {
     val request = reader.nextRequest
-    worker.work(request).foreach(println)
+    worker.work(request).onComplete { e =>
+      println(e)
+      //println("checks=" + storage.checks)
+      //println("clients=" + storage.clients)
+    }
   }
 
 }

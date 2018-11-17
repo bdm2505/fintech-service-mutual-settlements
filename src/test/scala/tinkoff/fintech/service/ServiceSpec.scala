@@ -1,6 +1,7 @@
 package tinkoff.fintech.service
 
 import org.scalatest.{FlatSpec, Matchers}
+import tinkoff.fintech.service.data.{Check, Product}
 
 class ServiceSpec extends FlatSpec with Matchers {
 
