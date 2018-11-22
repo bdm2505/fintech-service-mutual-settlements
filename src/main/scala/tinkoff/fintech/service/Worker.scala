@@ -25,7 +25,7 @@ class Worker(val storage: Storage, val emailSender: EmailSender)(implicit ec: Ex
       storage.save(id, client).map(_ => OkCreate(id))
 
     case Connect(checkId, clientId, name) =>
-      storage.updateCheck(checkId)(_.add(clientId, name)).map(_ => Ok)
+      storage.updateCheck(checkId)(_.connect(clientId, name)).map(_ => Ok)
 
     case Calculate(paidClientId, checkId) =>
       for {

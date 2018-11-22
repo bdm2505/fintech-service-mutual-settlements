@@ -5,13 +5,13 @@ import java.time.LocalDateTime
 case class Check(
                   products: Seq[Product] = Seq.empty,
                   clients: Map[ID[Client], List[String]] = Map.empty,
-                  time: Option[LocalDateTime] = Some(LocalDateTime.now())
+                  time: Option[LocalDateTime] = None
                 ) {
 
   def add(ps: Seq[Product]): Check =
     copy(products ++ ps)
 
-  def add(id: ID[Client], nameProduct: String): Check =
+  def connect(id: ID[Client], nameProduct: String): Check =
     copy(clients = clients + (id -> (nameProduct :: clients.getOrElse(id, Nil))))
 
   def remove(names: Seq[String]): Check =
