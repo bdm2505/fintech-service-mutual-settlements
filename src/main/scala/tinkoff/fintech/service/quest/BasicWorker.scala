@@ -1,14 +1,13 @@
-package tinkoff.fintech.service
-
+package tinkoff.fintech.service.quest
 
 import tinkoff.fintech.service.data.{Check, Client, ID}
 import tinkoff.fintech.service.email.EmailSender
-import tinkoff.fintech.service.quest._
 import tinkoff.fintech.service.storage.Storage
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class Worker(val storage: Storage, val emailSender: EmailSender)(implicit ec: ExecutionContext) {
+
+class BasicWorker(val storage: Storage, val emailSender: EmailSender)(implicit ec: ExecutionContext) extends Worker {
 
 
   def work(request: Request): Future[Response] = request match {
@@ -35,7 +34,7 @@ class Worker(val storage: Storage, val emailSender: EmailSender)(implicit ec: Ex
           listClients.filter {
             case (client, _) => client != paid
           }.map { case (client, products) =>
-            (client.email, paid.props, products)
+            (client.email, paid, products)
           }.toSeq
         }
       } yield Ok
