@@ -1,17 +1,18 @@
 package tinkoff.fintech.service.quest
 
 import tinkoff.fintech.service.data
-import tinkoff.fintech.service.data.{Check, Client, ID}
+import tinkoff.fintech.service.data.Client
 
 
 sealed trait Request
 
-case class AddProducts(id: ID[Check], product: Seq[data.Product]) extends Request
+final case class AddProducts(id: Int, product: Seq[data.Product]) extends Request
 
-case class CreateCheck(products: Seq[data.Product]) extends Request
+final case class CreateCheck(products: Seq[data.Product]) extends Request
 
-case class CreateClient(client: Client) extends Request
+final case class CreateClient(client: Client) extends Request
 
-case class Connect(checkId: ID[Check], clientId: ID[Client], nameProduct: String) extends Request
+final case class Connect(checkId: Int, clientId: Int, nameProduct: String) extends Request
 
-case class Calculate(paidClientId: ID[Client], checkId: ID[Check]) extends Request
+final case class Calculate(paidClientId: Int, checkId: Int) extends Request
+

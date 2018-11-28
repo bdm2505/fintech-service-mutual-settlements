@@ -1,7 +1,7 @@
 package tinkoff.fintech.service
 
 import org.scalatest.{FlatSpec, Matchers}
-import tinkoff.fintech.service.data.{Check, Client, ID, Product}
+import tinkoff.fintech.service.data.{Check, Client, Product}
 
 class CheckTest extends FlatSpec with Matchers {
 
@@ -23,7 +23,6 @@ class CheckTest extends FlatSpec with Matchers {
   }
 
   it should "connect client and product" in new Milk {
-    val id = ID.next[Client]
-    check.connect(id, "milk").clients shouldBe Map(id -> ("milk" :: Nil))
+    check.connect(89, "milk").clients shouldBe Map(89 -> ("milk" :: Nil))
   }
 }

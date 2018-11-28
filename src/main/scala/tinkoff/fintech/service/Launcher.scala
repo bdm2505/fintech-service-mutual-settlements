@@ -7,8 +7,7 @@ import tinkoff.fintech.service.quest.Worker
 import tinkoff.fintech.service.services.ConsoleService
 import tinkoff.fintech.service.storage.TrieMapStorage
 
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 
 object Launcher extends App {
   val storage = new TrieMapStorage
@@ -23,8 +22,6 @@ object Launcher extends App {
 
   val worker = Worker(storage, emailSender)
 
-  val future = new ConsoleService().start(worker)
-
-  Await.ready(future, Duration.Inf)
+  new ConsoleService().start(worker)
 
 }

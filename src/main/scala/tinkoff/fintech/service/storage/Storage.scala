@@ -1,6 +1,6 @@
 package tinkoff.fintech.service.storage
 
-import tinkoff.fintech.service.data.{Check, Client, ID, Product}
+import tinkoff.fintech.service.data.{Check, Client, Product}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -9,19 +9,19 @@ trait Storage {
 
   implicit val ec: ExecutionContext
 
-  def save(id: ID[Check], check: Check): Future[Unit]
+  def save(id: Option[Int], check: Check): Future[Int]
 
-  def findCheck(id: ID[Check]): Future[Check]
+  def findCheck(id: Int): Future[Check]
 
-  def save(id: ID[Client], client: Client): Future[Unit]
+  def save(id: Option[Int], client: Client): Future[Int]
 
-  def findClient(id: ID[Client]): Future[Client]
+  def findClient(id: Int): Future[Client]
 
 
-  def updateCheck(id: ID[Check])(funUpdate: Check => Check): Future[Unit] =
-    findCheck(id).flatMap(ch => save(id, funUpdate(ch)))
+  def updateCheck(id: Int)(funUpdate: Check => Check): Future[Int] =
+    findCheck(id).flatMap(ch => save(Some(id), funUpdate(ch)))
 
-  def formClientData(id: ID[Check]): Future[Map[Client, Seq[Product]]] = {
+  def formClientData(id: Int): Future[Map[Client, Seq[Product]]] = {
     for {
       check <- findCheck(id)
       listClients <- Future.sequence(check.clients.map { case (k, v) =>

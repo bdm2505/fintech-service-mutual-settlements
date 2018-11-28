@@ -1,6 +1,6 @@
 package tinkoff.fintech.service.quest
 
-import tinkoff.fintech.service.data.{Check, Client, ID}
+import tinkoff.fintech.service.data.Check
 import tinkoff.fintech.service.email.EmailSender
 import tinkoff.fintech.service.storage.Storage
 
@@ -16,12 +16,10 @@ class BasicWorker(val storage: Storage, val emailSender: EmailSender)(implicit e
       storage.updateCheck(id)(_.add(products)).map(_ => Ok)
 
     case CreateCheck(products) =>
-      val id = ID.next[Check]
-      storage.save(id, Check(products)).map(_ => OkCreate(id))
+      storage.save(None, Check(products)).map(id => OkCreate(id))
 
     case CreateClient(client) =>
-      val id = ID.next[Client]
-      storage.save(id, client).map(_ => OkCreate(id))
+      storage.save(None, client).map(id => OkCreate(id))
 
     case Connect(checkId, clientId, name) =>
       storage.updateCheck(checkId)(_.connect(clientId, name)).map(_ => Ok)
