@@ -15,26 +15,28 @@ class BasicWorker(val storage: Storage, val emailSender: EmailSender)(implicit e
     case AddProducts(id, products) =>
       storage.updateCheck(id)(_.add(products)).map(_ => Ok)
 
-    case CreateCheck(products) =>
-      storage.save(None, Check(products)).map(id => OkCreate(id))
+    case CreateCheck(products, idPaidClient) =>
+      for {
+        paidClient <- storage.findClient(idPaidClient)
+        id <- storage.save(None, Check(products, paidClient))
+      } yield OkCreate(id)
 
     case CreateClient(client) =>
       storage.save(None, client).map(id => OkCreate(id))
 
     case Connect(checkId, clientId, name) =>
-      storage.updateCheck(checkId)(_.connect(clientId, name)).map(_ => Ok)
-
-    case Calculate(paidClientId, checkId) =>
       for {
-        listClients <- storage.formClientData(checkId)
-        paid <- storage.findClient(paidClientId)
-        _ <- emailSender.sendAll {
-          listClients.filter {
-            case (client, _) => client != paid
-          }.map { case (client, products) =>
-            (client.email, paid, products)
-          }.toSeq
-        }
+        client <- storage.findClient(clientId)
+        _ <- storage.updateCheck(checkId)(_.connect(client, name))
+      } yield Ok
+
+    case SendEmail(checkId) =>
+
+
+      for {
+        check <- storage.findCheck(checkId)
+        list = check.noPaidClients.map{case (client, l) => (client.email, check.paidClient, l)}.toSeq
+        _ <- emailSender.sendAll(list)
       } yield Ok
   }
 

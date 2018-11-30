@@ -4,18 +4,23 @@ import java.time.LocalDateTime
 
 import io.circe.generic.JsonCodec
 
-@JsonCodec
+
 final case class Check(
-                        products: Seq[Product] = Seq.empty,
-                        clients: Map[Int, List[String]] = Map.empty,
+                        products: Seq[Product],
+                        paidClient: Client,
+                        clients: Map[Client, List[Product]] = Map.empty,
                         time: Option[LocalDateTime] = None
                       ) {
+
+  def noPaidClients: Map[Client, List[Product]] = clients.filter(_._1 != paidClient)
 
   def add(ps: Seq[Product]): Check =
     copy(products = products ++ ps)
 
-  def connect(id: Int, nameProduct: String): Check =
-    copy(clients = clients + (id -> (nameProduct :: clients.getOrElse(id, Nil))))
+  def connect(client: Client, name: String): Check =
+    find(name).map { product =>
+      copy(clients = clients + (client -> (product :: clients.getOrElse(client, Nil))))
+    } getOrElse this
 
   def remove(names: Seq[String]): Check =
     copy(products = products.filterNot(p => names.contains(p.name)))

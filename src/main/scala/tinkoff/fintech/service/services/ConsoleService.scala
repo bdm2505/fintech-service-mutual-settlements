@@ -12,7 +12,7 @@ class ConsoleService(implicit val ec: ExecutionContext) extends Service {
   var ids = Map.empty[Int, Int]
   var num = 1
 
-  override def start(worker: Worker) =  {
+  override def start(worker: Worker): Unit =  {
     println(help)
     while (true) {
       worker.work(nextRequest).onComplete {
@@ -32,11 +32,11 @@ class ConsoleService(implicit val ec: ExecutionContext) extends Service {
 
   val help: String =
     s"""|         Help:
-        |create [] - created empty check
+        |create [id-paid-client] - created empty check
         |add [id, product-name, product-cost]
         |client [name, email, props]
         |connect [id-check, id-client, name-product]
-        |paid [id-paid-client, id-check]
+        |send-email [id-paid-client, id-check]
         |exit []
       """.stripMargin
 
@@ -54,13 +54,13 @@ class ConsoleService(implicit val ec: ExecutionContext) extends Service {
         case "add" =>
           AddProducts(parseId(args(1)), Seq(Product(args(2), args(3).toDouble)))
         case "create" =>
-          CreateCheck(Seq.empty)
+          CreateCheck(Seq.empty, parseId(args(1)))
         case "client" =>
           CreateClient(Client(args(1), args(2), args(3)))
         case "connect" =>
           Connect(parseId(args(1)), parseId(args(2)), args(3))
-        case "paid" =>
-          Calculate(parseId(args(1)), parseId(args(2)))
+        case "send-email" =>
+          SendEmail(parseId(args(1)))
         case "exit" =>
           System.exit(0)
           nextRequest
