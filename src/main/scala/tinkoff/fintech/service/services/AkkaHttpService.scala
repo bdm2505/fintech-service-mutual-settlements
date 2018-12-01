@@ -9,7 +9,9 @@ import akka.stream.ActorMaterializer
 import tinkoff.fintech.service.quest._
 import tinkoff.fintech.service.services.AkkaHttpSupport._
 
-class AkkaHttpService extends Service {
+import scala.util.{Failure, Success}
+
+class AkkaHttpService(val host: String, val port: Int) extends Service {
 
 
   implicit val system = ActorSystem("system")
@@ -24,15 +26,22 @@ class AkkaHttpService extends Service {
     }
 
     val route =
-        path("create-check")(answer[CreateCheck]) ~
+      path("create-check")(answer[CreateCheck]) ~
         path("add-products")(answer[AddProducts]) ~
         path("create-client")(answer[CreateClient]) ~
         path("connect")(answer[Connect]) ~
         path("send-email")(answer[SendEmail])
 
 
-    val bind = Http().bindAndHandle(route, "localhost", 8080)
-    println(s"Server online at http://localhost:8080/\nPress Return to stop...")
+    val bind = Http().bindAndHandle(route, host, port)
+
+    bind.onComplete {
+      case Success(host) =>
+        println(s"akka http service online at ${host.localAddress}")
+      case Failure(e) =>
+        println(s"akka http service fail $e")
+    }
+
     atStop.map { _ =>
       bind.flatMap(_.unbind())
         .onComplete(_ => system.terminate())

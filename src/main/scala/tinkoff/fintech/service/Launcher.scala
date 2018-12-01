@@ -1,19 +1,21 @@
 package tinkoff.fintech.service
 
-import tinkoff.fintech.service.data.Client
-import tinkoff.fintech.service.data.Product
+import com.typesafe.config.{Config, ConfigFactory}
+import tinkoff.fintech.service.data.{Client, Product}
 import tinkoff.fintech.service.email.EmailSender
 import tinkoff.fintech.service.quest.Worker
-import tinkoff.fintech.service.services.{AkkaHttpService, ConsoleService}
-import tinkoff.fintech.service.storage.TrieMapStorage
+import tinkoff.fintech.service.services.{AkkaHttpService, ConsoleService, Service}
+import tinkoff.fintech.service.storage.Storage
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.io.StdIn
+import cats.implicits._
 
 object Launcher extends App {
-  val storage = new TrieMapStorage
+  implicit val ec = ExecutionContext.global
+  val config = ConfigFactory.load()
 
-  import storage.ec
+  val storage = Storage()
 
   val emailSender = new EmailSender {
     override def send(email: String, paidClient: Client, products: List[Product]) = Future {
@@ -23,10 +25,21 @@ object Launcher extends App {
 
   val worker = Worker(storage, emailSender)
 
-  val service = new AkkaHttpService()
-  service.startWithFuture(worker)
+  def loadService(name: String)(fun: => Service): Option[Service] =
+    if (config.getBoolean(s"service.$name.enabled")) Some(fun) else None
+
+  var isConsole = false
+
+  val services = Seq(
+    loadService("akka") {
+      new AkkaHttpService(config.getString("service.akka.host"), config.getInt("service.akka.port"))
+    }).flatten
+
+  services.foreach(_.startWithFuture(worker))
+
+  loadService("console"){ new ConsoleService()}.foreach(_.start(worker))
 
   StdIn.readLine
-  service.stop()
+  services.foreach(_.stop())
 
 }

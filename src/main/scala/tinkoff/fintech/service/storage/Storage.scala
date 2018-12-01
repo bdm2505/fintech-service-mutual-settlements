@@ -1,28 +1,35 @@
 package tinkoff.fintech.service.storage
 
-import tinkoff.fintech.service.data.{Check, Client, Product}
+import cats.Monad
+import tinkoff.fintech.service.data.{Check, Client}
 
-import scala.concurrent.{ExecutionContext, Future}
-
-
-trait Storage {
-
-  implicit val ec: ExecutionContext
-
-  def save(id: Option[Int], check: Check): Future[Int]
-
-  def findCheck(id: Int): Future[Check]
-
-  def save(id: Option[Int], client: Client): Future[Int]
-
-  def findClient(id: Int): Future[Client]
+import scala.concurrent.Future
 
 
-  def updateCheck(id: Int)(funUpdate: Check => Check): Future[Int] =
-    findCheck(id).flatMap(ch => save(Some(id), funUpdate(ch)))
+abstract class Storage[F[_]: Monad] {
+
+  /**
+    * @return context with id check
+    */
+  def saveNewCheck(check: Check) : F[Int]
+
+  def updateCheck(id: Int, check: => Check): F[Unit]
+
+  def findCheck(id: Int): F[Check]
+
+  /**
+    * @return context with id client
+    */
+  def saveNewClient(client: Client): F[Int]
+
+  def findClient(id: Int): F[Client]
+
+  def transact[A](context: => F[A]) : Future[A]
 
 }
 
 object Storage {
-  def apply(): Storage = new TrieMapStorage()
+
+
+  def apply(): Storage[Option] = new TrieMapStorage()
 }

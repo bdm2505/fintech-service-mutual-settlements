@@ -1,5 +1,6 @@
 package tinkoff.fintech.service.quest
 
+import cats.Monad
 import tinkoff.fintech.service.email.EmailSender
 import tinkoff.fintech.service.storage.Storage
 
@@ -10,6 +11,7 @@ trait Worker {
 }
 
 object Worker {
-  def apply(storage: Storage, emailSender: EmailSender)(implicit ec: ExecutionContext): Worker = new BasicWorker(storage, emailSender)
+  def apply[F[_] : Monad](storage: Storage[F], emailSender: EmailSender)(implicit ex: ExecutionContext): Worker =
+    new BasicWorker(storage, emailSender)
 }
 

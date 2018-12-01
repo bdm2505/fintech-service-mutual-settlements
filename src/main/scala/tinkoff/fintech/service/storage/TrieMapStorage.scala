@@ -3,9 +3,11 @@ package tinkoff.fintech.service.storage
 import tinkoff.fintech.service.data.{Check, Client}
 
 import scala.collection.concurrent.TrieMap
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
+import scala.concurrent.{ExecutionContext, Future}
+import cats.implicits._
 
-class TrieMapStorage extends Storage {
+class TrieMapStorage extends Storage[Option] {
+  implicit val ec = ExecutionContext.global
 
   var oldId = 0
   def nextID = {
@@ -16,27 +18,35 @@ class TrieMapStorage extends Storage {
   var checks: TrieMap[Int, Check] = TrieMap.empty
   var clients: TrieMap[Int, Client] = TrieMap.empty
 
-
-  override implicit val ec: ExecutionContextExecutor = ExecutionContext.global
-
-  override def save(idOption: Option[Int], check: Check): Future[Int] = Future {
-    val id = idOption.getOrElse(nextID)
-    checks.put(id, check)
-    id
+  /**
+    * @return db context with id check
+    */
+  override def saveNewCheck(check: Check): Option[Int] = {
+    val id = nextID
+    checks += id -> check
+    Some(id)
   }
 
-  override def findCheck(id: Int): Future[Check] = Future {
-    checks(id)
+  override def updateCheck(id: Int, check: => Check): Option[Unit] =
+    checks.get(id).map(_ => checks.update(id, check))
+
+  override def findCheck(id: Int): Option[Check] =
+    checks.get(id)
+
+  /**
+    * @return db context with id client
+    */
+  override def saveNewClient(client: Client): Option[Int] = {
+    val id = nextID
+    clients += id -> client
+    Some(id)
   }
 
-  override def save(idOption: Option[Int], client: Client): Future[Int] = Future {
-    val id = idOption.getOrElse(nextID)
-    clients.put(id, client)
-    id
-  }
+  override def findClient(id: Int): Option[Client] =
+    clients.get(id)
 
-  override def findClient(id: Int): Future[Client] = Future {
-    clients(id)
-  }
-
+  override def transact[A](context: => Option[A]): Future[A] =
+    Future(context.get)
 }
+
+

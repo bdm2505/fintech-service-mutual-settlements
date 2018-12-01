@@ -15,27 +15,33 @@ class StorageTest extends AsyncFlatSpec with Matchers {
 
   it should "save ans find check" in {
     val storage = Storage()
-    for {
-      id <- storage save(None, check)
-      res <- storage findCheck id
-    } yield res shouldBe check
+    storage.transact {
+      for {
+        id <- storage saveNewCheck check
+        res <- storage findCheck id
+      } yield res shouldBe check
+    }
   }
 
   it should "update check" in {
     val storage = Storage()
-    for {
-      id <- storage save(None, check)
-      id <- storage.updateCheck(id)(_ - "milk")
-      res <- storage findCheck id
-    } yield res shouldBe Check(Seq(), Client("", "", ""))
+    storage.transact {
+      for {
+        id <- storage saveNewCheck check
+        _ <- storage.updateCheck(id, check - "milk")
+        res <- storage findCheck id
+      } yield res shouldBe Check(Seq(), Client("", "", ""))
+    }
   }
 
   it should "save and find client" in {
     val storage = Storage()
-    for {
-      id <- storage save(None, client)
-      res <- storage findClient id
-    } yield res shouldBe client
+    storage.transact {
+      for {
+        id <- storage saveNewClient client
+        res <- storage findClient id
+      } yield res shouldBe client
+    }
   }
 
 }
