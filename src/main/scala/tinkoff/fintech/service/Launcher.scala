@@ -5,17 +5,19 @@ import tinkoff.fintech.service.data.{Client, Product}
 import tinkoff.fintech.service.email.EmailSender
 import tinkoff.fintech.service.quest.Worker
 import tinkoff.fintech.service.services.{AkkaHttpService, ConsoleService, Service}
-import tinkoff.fintech.service.storage.Storage
+import tinkoff.fintech.service.storage.{SqlStorage, Storage}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.io.StdIn
 import cats.implicits._
+import cats.syntax._
+import doobie.implicits._
 
 object Launcher extends App {
   implicit val ec = ExecutionContext.global
   val config = ConfigFactory.load()
 
-  val storage = Storage()
+  val storage = new SqlStorage
 
   val emailSender = new EmailSender {
     override def send(email: String, paidClient: Client, products: List[Product]) = Future {

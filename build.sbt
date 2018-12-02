@@ -12,6 +12,8 @@ libraryDependencies += "com.typesafe.akka" %% "akka-http" % "10.1.5"
 libraryDependencies += "com.typesafe.akka" %% "akka-stream" % "2.5.18"
 libraryDependencies += "com.typesafe" % "config" % "1.3.2"
 
+libraryDependencies += "com.h2database" % "h2" % "1.4.197"
+
 
 val circeVersion = "0.10.1"
 

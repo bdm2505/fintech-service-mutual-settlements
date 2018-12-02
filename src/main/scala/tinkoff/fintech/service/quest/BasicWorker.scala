@@ -13,7 +13,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class BasicWorker[F[_] : Monad](val storage: Storage[F], val emailSender: EmailSender)(implicit ec: ExecutionContext) extends Worker {
 
   def work(request: Request): Future[Response] = {
-    successWork(request).recover { case _: Exception => Fail }
+    successWork(request).recover { case e: Exception => e.printStackTrace(); Fail(e.getMessage) }
   }
 
 

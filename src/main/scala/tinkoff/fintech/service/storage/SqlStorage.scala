@@ -14,7 +14,7 @@ import tinkoff.fintech.service.data._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class PsqlStorage extends Storage[ConnectionIO] {
+class SqlStorage extends Storage[ConnectionIO] {
   implicit val cs: ContextShift[IO] = IO.contextShift(ExecutionContext.global)
   val transactor: Aux[IO, Unit] = {
     val config: Config = ConfigFactory.load()
