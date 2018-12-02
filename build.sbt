@@ -8,9 +8,9 @@ scalacOptions += "-Ypartial-unification"
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % Test
 
-libraryDependencies += "com.typesafe.akka" %% "akka-http"   % "10.1.5"
+libraryDependencies += "com.typesafe.akka" %% "akka-http" % "10.1.5"
 libraryDependencies += "com.typesafe.akka" %% "akka-stream" % "2.5.18"
-libraryDependencies += "com.typesafe" %% "config" % "1.3.2"
+libraryDependencies += "com.typesafe" % "config" % "1.3.2"
 
 
 val circeVersion = "0.10.1"
@@ -23,3 +23,10 @@ libraryDependencies ++= Seq(
 
 resolvers += Resolver.sonatypeRepo("releases")
 addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full)
+
+val doobieVersion = "0.6.0"
+libraryDependencies ++= Seq(
+  "org.tpolecat" %% "doobie-core" % doobieVersion,
+  "org.tpolecat" %% "doobie-postgres" % doobieVersion,
+  "org.tpolecat" %% "doobie-specs2" % doobieVersion
+)

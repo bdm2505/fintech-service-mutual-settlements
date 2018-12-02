@@ -10,6 +10,7 @@ class TrieMapStorage extends Storage[Option] {
   implicit val ec = ExecutionContext.global
 
   var oldId = 0
+
   def nextID = {
     oldId += 1
     oldId
@@ -27,8 +28,8 @@ class TrieMapStorage extends Storage[Option] {
     Some(id)
   }
 
-  override def updateCheck(id: Int, check: => Check): Option[Unit] =
-    checks.get(id).map(_ => checks.update(id, check))
+  override def updateCheck(check: => Check): Option[Unit] =
+    checks.get(check.id.get).map(_ => checks.update(check.id.get, check))
 
   override def findCheck(id: Int): Option[Check] =
     checks.get(id)
@@ -48,5 +49,3 @@ class TrieMapStorage extends Storage[Option] {
   override def transact[A](context: => Option[A]): Future[A] =
     Future(context.get)
 }
-
-

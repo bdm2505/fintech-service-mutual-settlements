@@ -1,16 +1,13 @@
 package tinkoff.fintech.service.data
 
+import java.sql.Timestamp
 import java.time.LocalDateTime
 
-import io.circe.generic.JsonCodec
-
-
-final case class Check(
-                        products: Seq[Product],
-                        paidClient: Client,
-                        clients: Map[Client, List[Product]] = Map.empty,
-                        time: Option[LocalDateTime] = None
-                      ) {
+final case class Check(id: Option[Int],
+                       products: Seq[Product],
+                       paidClient: Client,
+                       clients: Map[Client, List[Product]] = Map.empty,
+                       time: Option[LocalDateTime] = Some(LocalDateTime.now())) {
 
   def noPaidClients: Map[Client, List[Product]] = clients.filter(_._1 != paidClient)
 
@@ -42,7 +39,11 @@ final case class Check(
 
 }
 
+final case class CheckBase(id: Int,
+                           time: Timestamp,
+                           clientId: Int)
 
-
-
-
+//final case class TestCheck(products: Seq[Product],
+//                           paidClient: Client,
+//                           clients: Map[Client, List[Product]] = Map.empty,
+//                           time: Option[LocalDateTime] = None)
