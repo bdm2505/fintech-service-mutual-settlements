@@ -23,13 +23,13 @@ class BasicWorker[F[_] : Monad](val storage: Storage[F], val emailSender: EmailS
       case AddProducts(id, products) =>
         for {
           check <- findCheck(id)
-          _ <- updateCheck(id, check ++ products)
+          _ <- updateCheck(check ++ products)
         } yield Ok
 
       case CreateCheck(products, idPaidClient) =>
         for {
           paidClient <- findClient(idPaidClient)
-          id <- saveNewCheck(Check(products, paidClient))
+          id <- saveNewCheck(Check(None, products, paidClient))
         } yield OkCreate(id)
 
       case CreateClient(client) =>
@@ -39,7 +39,7 @@ class BasicWorker[F[_] : Monad](val storage: Storage[F], val emailSender: EmailS
         for {
           client <- findClient(clientId)
           check <- findCheck(checkId)
-          _ <- updateCheck(checkId, check.connect(client, name))
+          _ <- updateCheck(check.connect(client, name))
         } yield Ok
 
       case SendEmail(checkId) =>

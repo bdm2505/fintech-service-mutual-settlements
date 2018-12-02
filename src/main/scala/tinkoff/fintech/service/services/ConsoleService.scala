@@ -12,13 +12,13 @@ class ConsoleService(implicit val ec: ExecutionContext) extends Service {
   var ids = Map.empty[Int, Int]
   var num = 1
 
-  override def start(worker: Worker): Unit =  {
+  override def start(worker: Worker): Unit = {
     println(help)
     while (true) {
       worker.work(nextRequest).onComplete {
         case Success(response) =>
           response match {
-            case OkCreate(id:Int) =>
+            case OkCreate(id: Int) =>
               ids += (num -> id)
               println(s"ok id = ':$num'")
               num += 1
@@ -52,11 +52,11 @@ class ConsoleService(implicit val ec: ExecutionContext) extends Service {
     try {
       args(0) match {
         case "add" =>
-          AddProducts(parseId(args(1)), Seq(Product(args(2), args(3).toDouble)))
+          AddProducts(parseId(args(1)), Seq(Product(None, args(2), args(3).toDouble)))
         case "create" =>
           CreateCheck(Seq.empty, parseId(args(1)))
         case "client" =>
-          CreateClient(Client(args(1), args(2), args(3)))
+          CreateClient(Client(None, args(1), args(2), Option(args(3)), Option(args(4))))
         case "connect" =>
           Connect(parseId(args(1)), parseId(args(2)), args(3))
         case "send-email" =>

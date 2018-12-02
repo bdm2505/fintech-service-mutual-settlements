@@ -5,15 +5,14 @@ import tinkoff.fintech.service.data.{Check, Client}
 
 import scala.concurrent.Future
 
-
-abstract class Storage[F[_]: Monad] {
+abstract class Storage[F[_] : Monad] {
 
   /**
     * @return context with id check
     */
-  def saveNewCheck(check: Check) : F[Int]
+  def saveNewCheck(check: Check): F[Int]
 
-  def updateCheck(id: Int, check: => Check): F[Unit]
+  def updateCheck(check: => Check): F[Unit]
 
   def findCheck(id: Int): F[Check]
 
@@ -24,12 +23,10 @@ abstract class Storage[F[_]: Monad] {
 
   def findClient(id: Int): F[Client]
 
-  def transact[A](context: => F[A]) : Future[A]
+  def transact[A](context: => F[A]): Future[A]
 
 }
 
 object Storage {
-
-
   def apply(): Storage[Option] = new TrieMapStorage()
 }
