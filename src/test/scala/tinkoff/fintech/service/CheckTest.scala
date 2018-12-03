@@ -6,7 +6,7 @@ import tinkoff.fintech.service.data.{Check, Client, Product}
 class CheckTest extends FlatSpec with Matchers {
 
   trait Milk {
-    val check = Check(Some(1), Seq(Product(Some(1), "milk", 90)), Client(None, "", "", None, None))
+    val check = Check(Some(1), Seq(Product(Some(1), "milk", 90)), Client("", "", None, None))
   }
 
   it should "add Products" in new Milk {
@@ -23,7 +23,7 @@ class CheckTest extends FlatSpec with Matchers {
   }
 
   it should "connect client and product" in new Milk {
-    val cl = Client(None, " ", "", None, None)
+    val cl = Client(" ", "", None, None)
     check.connect(cl, "milk").clients shouldBe Map(cl -> (Product(Some(1), "milk", 90) :: Nil))
   }
 }

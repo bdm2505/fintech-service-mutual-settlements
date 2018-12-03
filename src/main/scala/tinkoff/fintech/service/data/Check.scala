@@ -43,7 +43,7 @@ final case class CheckBase(id: Int,
                            time: Timestamp,
                            clientId: Int)
 
-//final case class TestCheck(products: Seq[Product],
-//                           paidClient: Client,
-//                           clients: Map[Client, List[Product]] = Map.empty,
-//                           time: Option[LocalDateTime] = None)
+object Check {
+  def apply(products: Seq[Product], paidClient: Client): Check =
+    new Check(None, products, paidClient, Map.empty, Some(LocalDateTime.now()))
+}

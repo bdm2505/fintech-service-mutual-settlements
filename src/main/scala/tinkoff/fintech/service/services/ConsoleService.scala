@@ -3,7 +3,7 @@ package tinkoff.fintech.service.services
 import tinkoff.fintech.service.data.{Client, Product}
 import tinkoff.fintech.service.quest._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 import scala.io.StdIn
 import scala.util.Success
 
@@ -52,11 +52,11 @@ class ConsoleService(implicit val ec: ExecutionContext) extends Service {
     try {
       args(0) match {
         case "add" =>
-          AddProducts(parseId(args(1)), Seq(Product(None, args(2), args(3).toDouble)))
+          AddProducts(parseId(args(1)), Seq(Product(args(2), args(3).toDouble)))
         case "create" =>
           CreateCheck(Seq.empty, parseId(args(1)))
         case "client" =>
-          CreateClient(Client(None, args(1), args(2), Option(args(3)), Option(args(4))))
+          CreateClient(Client(args(1), args(2), Option(args(3)), Option(args(4))))
         case "connect" =>
           Connect(parseId(args(1)), parseId(args(2)), args(3))
         case "send-email" =>

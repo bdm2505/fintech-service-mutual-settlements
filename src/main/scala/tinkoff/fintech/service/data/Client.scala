@@ -8,3 +8,8 @@ case class Client(id: Option[Int],
                   email: String,
                   phone: Option[String],
                   cardNumber: Option[String])
+
+object Client {
+  def apply(name: String, email: String, phone: Option[String], cardNumber: Option[String]): Client =
+    new Client(None, name, email, phone, cardNumber)
+}
