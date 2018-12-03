@@ -5,7 +5,8 @@ import io.circe.generic.JsonCodec
 @JsonCodec
 case class Product(id: Option[Int],
                    name: String,
-                   cost: Double)
+                   cost: Double,
+                   client: Option[Client])
 
 final case class ProductBase(id: Option[Int],
                              name: String,
@@ -15,5 +16,5 @@ final case class ProductBase(id: Option[Int],
 
 object Product {
   def apply(name: String, cost: Double): Product =
-    new Product(None, name, cost)
+    new Product(None, name, cost, None)
 }

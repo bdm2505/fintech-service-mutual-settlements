@@ -9,7 +9,7 @@ import tinkoff.fintech.service.storage.Storage
 class StorageTest extends AsyncFlatSpec with Matchers {
 
 
-  val check = Check(None, Seq(Product(None, "milk", 90)), Client("", "", None, None))
+  val check = Check(None, Seq(Product(None, "milk", 90, None)), Client("", "", None, None))
   val client = Client("bob", "bob@y.ru", Some("9000"), None)
 
 
@@ -30,7 +30,7 @@ class StorageTest extends AsyncFlatSpec with Matchers {
         id <- storage saveNewCheck check
         _ <- storage.updateCheck(check.copy(id = Some(id)) - "milk")
         res <- storage findCheck id
-      } yield res shouldBe Check(Some(id), Seq(), Client("", "", None, None), Map.empty, check.time)
+      } yield res shouldBe Check(Some(id), Seq(), Client("", "", None, None), check.time)
     }
   }
 

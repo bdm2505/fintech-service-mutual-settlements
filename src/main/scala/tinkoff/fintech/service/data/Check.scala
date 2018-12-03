@@ -6,18 +6,24 @@ import java.time.LocalDateTime
 final case class Check(id: Option[Int],
                        products: Seq[Product],
                        paidClient: Client,
-                       clients: Map[Client, List[Product]] = Map.empty,
                        time: Option[LocalDateTime] = Some(LocalDateTime.now())) {
 
-  def noPaidClients: Map[Client, List[Product]] = clients.filter(_._1 != paidClient)
+  def noPaidClients: Map[Client, List[Product]] =
+    products
+      .filter(_.client.nonEmpty)
+      .map(product => (product.client, product))
+      .groupBy(_._1.get).mapValues(_.map(_._2).toList)
 
   def add(ps: Seq[Product]): Check =
     copy(products = products ++ ps)
 
-  def connect(client: Client, name: String): Check =
-    find(name).map { product =>
-      copy(clients = clients + (client -> (product :: clients.getOrElse(client, Nil))))
-    } getOrElse this
+  def connect(client: Client, name: String): Check = {
+    val (a, b) = products.partition(_.name == name)
+    if (a.isEmpty)
+      this
+    else
+      this.copy(products = a.map(_.copy(client = Some(client))) ++ b)
+  }
 
   def remove(names: Seq[String]): Check =
     copy(products = products.filterNot(p => names.contains(p.name)))
@@ -45,5 +51,5 @@ final case class CheckBase(id: Int,
 
 object Check {
   def apply(products: Seq[Product], paidClient: Client): Check =
-    new Check(None, products, paidClient, Map.empty, Some(LocalDateTime.now()))
+    new Check(None, products, paidClient, Some(LocalDateTime.now()))
 }

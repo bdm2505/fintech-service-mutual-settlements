@@ -71,18 +71,19 @@ class SqlStorage extends Storage[ConnectionIO] {
 
   override def findCheck(id: Int): ConnectionIO[Check] = {
     def findProducts(checkId: Int) =
-      sql"SELECT id, name, cost, check_id, client_id FROM product WHERE check_id = $checkId"
-        .query[ProductBase]
+      sql"""
+           SELECT product.id, product.name, product.cost, client.id, client.name, client.email, client.phone, client.card_number
+           FROM product
+           LEFT JOIN client ON client.id = client_id
+           WHERE check_id = $checkId
+           """
+        .query[(Option[Int], String, Double, Option[Int], Option[String], Option[String], Option[String], Option[String])]
         .to[Seq]
-
-    def convertProducts(products: Seq[ProductBase]) =
-      products.map(product => Product(product.id, product.name, product.cost))
-
-    def clientProducts(checkId: Int): ConnectionIO[Map[Client, List[Product]]] =
-      sql"SELECT client.id, client.name, client.email, client.phone, client.card_number, product.name, product.cost FROM product LEFT JOIN client ON client.id = client_id WHERE check_id = $checkId AND client_id IS NOT NULL"
-        .query[(Client, Product)]
-        .to[List]
-        .map(_.groupBy(_._1).mapValues(_.map(_._2)))
+        .map(_.map {
+          case (pId, pName, pCost, cId, cName, cEmail, cPhone, cCard) =>
+            val client = if (cId.isEmpty) None else Some(Client(cId, cName.get, cEmail.get, cPhone, cCard))
+            new Product(pId, pName, pCost, client)
+        })
 
     sql"""SELECT id, time, client_id FROM "check" WHERE id = $id"""
       .query[CheckBase]
@@ -91,8 +92,7 @@ class SqlStorage extends Storage[ConnectionIO] {
         for {
           paidClient <- findClient(check.clientId)
           products <- findProducts(check.id)
-          clientProducts <- clientProducts(check.id)
-        } yield Check(Some(check.id), convertProducts(products), paidClient, clientProducts, Some(check.time.toLocalDateTime))
+        } yield Check(Some(check.id), products, paidClient, Some(check.time.toLocalDateTime))
       }
   }
 
