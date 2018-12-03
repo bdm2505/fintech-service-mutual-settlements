@@ -28,9 +28,9 @@ class StorageTest extends AsyncFlatSpec with Matchers {
     storage.transact {
       for {
         id <- storage saveNewCheck check
-        _ <- storage.updateCheck(check - "milk")
+        _ <- storage.updateCheck(check.copy(id = Some(id)) - "milk")
         res <- storage findCheck id
-      } yield res shouldBe Check(Seq(), Client("", "", None, None))
+      } yield res shouldBe Check(Some(id), Seq(), Client("", "", None, None), Map.empty, check.time)
     }
   }
 
