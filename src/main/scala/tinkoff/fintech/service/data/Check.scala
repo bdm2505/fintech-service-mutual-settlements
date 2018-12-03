@@ -3,47 +3,50 @@ package tinkoff.fintech.service.data
 import java.sql.Timestamp
 import java.time.LocalDateTime
 
-final case class Check(id: Option[Int],
-                       products: Seq[Product],
-                       paidClient: Client,
-                       clients: Map[Client, List[Product]] = Map.empty,
-                       time: Option[LocalDateTime] = Some(LocalDateTime.now())) {
+final case class Check(
+                        id: Option[Int],
+                        products: Set[Product],
+                        paidClientId: Int,
+                        time: Option[LocalDateTime]
+                      ) {
 
-  def noPaidClients: Map[Client, List[Product]] = clients.filter(_._1 != paidClient)
+  def + (product: Product): Check =
+    copy(products = products + product)
 
-  def add(ps: Seq[Product]): Check =
+  def - (product: Product): Check =
+    copy(products = products - product)
+
+  def update(old: Product, newProduct: Product): Check =
+    copy(products = products - old + newProduct)
+
+  def connect(productId: Int, clientId: Int): Check =
+    products.find(_.id.contains(productId))
+      .map(product => update(product, product connect clientId))
+      .getOrElse(this)
+
+  def ++ (ps: Seq[Product]): Check =
     copy(products = products ++ ps)
 
-  def connect(client: Client, name: String): Check =
-    find(name).map { product =>
-      copy(clients = clients + (client -> (product :: clients.getOrElse(client, Nil))))
-    } getOrElse this
+  def filterNoPaid: Seq[Product] =
+    products.filter(!_.clientId.contains(paidClientId)).toSeq
 
-  def remove(names: Seq[String]): Check =
-    copy(products = products.filterNot(p => names.contains(p.name)))
+}
+object Check{
+  def apply(
+             products: Seq[Product],
+             paidClientId: Int,
+             id: Option[Int] = None,
+             time: Option[LocalDateTime] = None
+           ): Check = new Check(id, products.toSet, paidClientId, time)
 
-  def find(name: String): Option[Product] =
-    products.find(_.name == name)
-
-  def +(products: Product*): Check =
-    add(products)
-
-  def -(names: String*): Check =
-    remove(names)
-
-  def ++(ps: Seq[Product]): Check =
-    add(ps)
-
-  def --(ps: Seq[String]): Check =
-    remove(ps)
-
+  def apply(
+             id: Option[Int],
+             products: Seq[Product],
+             paidClientId: Int,
+             time: Option[LocalDateTime]
+           ): Check = new Check(id, products.toSet, paidClientId, time)
 }
 
 final case class CheckBase(id: Int,
                            time: Timestamp,
                            clientId: Int)
-
-//final case class TestCheck(products: Seq[Product],
-//                           paidClient: Client,
-//                           clients: Map[Client, List[Product]] = Map.empty,
-//                           time: Option[LocalDateTime] = None)

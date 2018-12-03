@@ -17,10 +17,10 @@ object Launcher extends App {
   implicit val ec = ExecutionContext.global
   val config = ConfigFactory.load()
 
-  val storage = new SqlStorage
+  val storage = Storage()
 
   val emailSender = new EmailSender {
-    override def send(email: String, paidClient: Client, products: List[Product]) = Future {
+    override def send(email: String, paidClient: Client, products: Seq[Product]) = Future {
       println(s"send $email\n  props=$paidClient\n    ${products.mkString("\n    ")}\n  sum cost=${products.map(_.cost).sum}")
     }
   }
