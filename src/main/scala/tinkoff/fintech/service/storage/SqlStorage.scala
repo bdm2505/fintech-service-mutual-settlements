@@ -57,10 +57,9 @@ class SqlStorage extends Storage[ConnectionIO] {
         .update
         .run
 
-    //TODO map clientsProduct to products with edited clientId
     def saveProducts(products: Seq[Product]) = {
       val sql = "UPDATE product SET name = ?, cost = ?, client_id = ? WHERE id = ?"
-      Update[(String, Double, Int, Int)](sql).updateMany(products.map(product => (product.name, product.cost, 70, product.id.get)).toList)
+      Update[(String, Double, Option[Int], Int)](sql).updateMany(products.map(product => (product.name, product.cost, product.client.map(_.id.get), product.id.get)).toList)
     }
 
     for {
