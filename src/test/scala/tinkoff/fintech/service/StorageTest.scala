@@ -9,8 +9,8 @@ import tinkoff.fintech.service.storage.Storage
 class StorageTest extends AsyncFlatSpec with Matchers {
 
 
-  val check = Check(Seq(Product("milk", 90)), 4)
-  val client = Client("bob", "bob@y.ru", Some("9000"))
+  val check = Check(None, Seq(Product(None, "milk", 90, None)), Client("", "", None, None))
+  val client = Client("bob", "bob@y.ru", Some("9000"), None)
 
 
   it should "save ans find check" in {
@@ -23,16 +23,16 @@ class StorageTest extends AsyncFlatSpec with Matchers {
     }
   }
 
-//  it should "update check" in {
-//    val storage = Storage()
-//    storage.transact {
-//      for {
-//        id <- storage saveNewCheck check
-//        _ <- storage.updateCheck(check - "milk")
-//        res <- storage findCheck id
-//      } yield res shouldBe Check(Seq(Product("milk", 90)), 4)
-//    }
-//  }
+  it should "update check" in {
+    val storage = Storage()
+    storage.transact {
+      for {
+        id <- storage saveNewCheck check
+        _ <- storage.updateCheck(check.copy(id = Some(id)) - Product(None, "milk", 90, None))
+        res <- storage findCheck id
+      } yield res shouldBe Check(Some(id), Seq(), Client("", "", None, None), check.time)
+    }
+  }
 
   it should "save and find client" in {
     val storage = Storage()

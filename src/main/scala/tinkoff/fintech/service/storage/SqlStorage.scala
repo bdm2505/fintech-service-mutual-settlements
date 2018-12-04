@@ -2,7 +2,6 @@ package tinkoff.fintech.service.storage
 
 import java.sql.Timestamp
 
-import cats.Traverse
 import cats.effect.{ContextShift, IO}
 import cats.implicits._
 import com.typesafe.config.{Config, ConfigFactory}
@@ -35,7 +34,7 @@ class SqlStorage extends Storage[ConnectionIO] {
     val time = check.time.map(time => Timestamp.valueOf(time))
 
     def saveCheck =
-      sql"""INSERT INTO "check" (time, client_id) VALUES ($time, ${check.paidClientId})"""
+      sql"""INSERT INTO "check" (time, client_id) VALUES ($time, ${check.paidClient.id})"""
         .update
         .withUniqueGeneratedKeys[Int]("id")
 
@@ -54,40 +53,45 @@ class SqlStorage extends Storage[ConnectionIO] {
     val time = check.time.map(time => Timestamp.valueOf(time))
 
     def saveCheck =
-      sql"""UPDATE "check" SET time = $time, client_id = ${check.paidClientId} WHERE id = ${check.id}"""
+      sql"""UPDATE "check" SET time = $time, client_id = ${check.paidClient.id} WHERE id = ${check.id}"""
         .update
         .run
 
-
     def saveProducts(products: Seq[Product]) = {
       val sql = "UPDATE product SET name = ?, cost = ?, client_id = ? WHERE id = ?"
-      Update[(String, Double, Option[Int], Int)](sql)
-        .updateMany(products.map(product => (product.name, product.cost, product.clientId, product.id.get)).toList)
+      Update[(String, Double, Option[Int], Int)](sql).updateMany(products.map(product => (product.name, product.cost, product.client.map(_.id.get), product.id.get)).toList)
     }
 
     for {
       _ <- saveCheck
-      _ <- saveProducts(check.products.toSeq)
+      _ <- saveProducts(check.products)
     } yield ()
   }
 
   override def findCheck(id: Int): ConnectionIO[Check] = {
-
     def findProducts(checkId: Int) =
-      sql"""SELECT id, name, cost, client_id
-            FROM product
-            WHERE check_id = $checkId
-        """
-        .query[Product]
+      sql"""
+           SELECT product.id, product.name, product.cost, client.id, client.name, client.email, client.phone, client.card_number
+           FROM product
+           LEFT JOIN client ON client.id = client_id
+           WHERE check_id = $checkId
+           """
+        .query[(Option[Int], String, Double, Option[Int], Option[String], Option[String], Option[String], Option[String])]
         .to[Seq]
+        .map(_.map {
+          case (pId, pName, pCost, cId, cName, cEmail, cPhone, cCard) =>
+            val client = if (cId.isEmpty) None else Some(Client(cId, cName.get, cEmail.get, cPhone, cCard))
+            new Product(pId, pName, pCost, client)
+        })
 
     sql"""SELECT id, time, client_id FROM "check" WHERE id = $id"""
       .query[CheckBase]
       .unique
       .flatMap { check =>
         for {
+          paidClient <- findClient(check.clientId)
           products <- findProducts(check.id)
-        } yield Check(Some(check.id), products, check.clientId, Some(check.time.toLocalDateTime))
+        } yield Check(Some(check.id), products, paidClient, Some(check.time.toLocalDateTime))
       }
   }
 
@@ -108,4 +112,3 @@ class SqlStorage extends Storage[ConnectionIO] {
   override def transact[A](context: => ConnectionIO[A]): Future[A] =
     context.transact(transactor).unsafeToFuture()
 }
-
