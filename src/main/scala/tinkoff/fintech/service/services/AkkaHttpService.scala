@@ -30,7 +30,7 @@ class AkkaHttpService(val host: String, val port: Int) extends Service {
         path("add-products")(answer[AddProducts]) ~
         path("create-client")(answer[CreateClient]) ~
         path("connect")(answer[Connect]) ~
-        path("send-email")(answer[SendEmail])
+        path("get-check")(answer[GetCheck])
 
 
     val bind = Http().bindAndHandle(route, host, port)

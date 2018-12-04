@@ -3,6 +3,9 @@ package tinkoff.fintech.service.data
 import java.sql.Timestamp
 import java.time.LocalDateTime
 
+import io.circe.generic.JsonCodec
+
+@JsonCodec
 final case class Check(id: Option[Int],
                        products: Seq[Product],
                        paidClient: Client,
@@ -33,6 +36,10 @@ final case class Check(id: Option[Int],
     else
       this.copy(products = a.map(_.copy(client = Some(client))) ++ b)
   }
+
+  def full: Boolean =
+    !products.exists(_.client.isEmpty)
+
 }
 
 final case class CheckBase(id: Int,

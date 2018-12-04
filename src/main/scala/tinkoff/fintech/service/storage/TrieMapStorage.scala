@@ -24,7 +24,7 @@ class TrieMapStorage extends Storage[Option] {
     */
   override def saveNewCheck(check: Check): Option[Int] = {
     val id = nextID
-    checks += id -> check
+    checks += id -> check.copy(Some(id), check.products.map(_.copy(Some(nextID))))
     Some(id)
   }
 
@@ -39,7 +39,7 @@ class TrieMapStorage extends Storage[Option] {
     */
   override def saveNewClient(client: Client): Option[Int] = {
     val id = nextID
-    clients += id -> client
+    clients += id -> client.copy(Some(id))
     Some(id)
   }
 

@@ -28,6 +28,6 @@ object CreateClient{
 final case class Connect(checkId: Int, clientId: Int, productId: Int) extends Request
 
 @JsonCodec
-final case class SendEmail(checkId: Int) extends Request
+final case class GetCheck(id: Int) extends Request
 
 

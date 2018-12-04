@@ -36,7 +36,7 @@ class ConsoleService(implicit val ec: ExecutionContext) extends Service {
         |add [id, [product-name, product-cost]*] - add products in check
         |client [name, email, ?phone, ?number-card]
         |connect [id-check, id-client, id-product]
-        |send-email [id-check]
+        |get [id-check]
         |exit []
       """.stripMargin
 
@@ -62,8 +62,8 @@ class ConsoleService(implicit val ec: ExecutionContext) extends Service {
           CreateClient(Client(args(1), args(2), optArgs(3), optArgs(4)))
         case "connect" =>
           Connect(parseId(args(1)), parseId(args(2)), args(3).toInt)
-        case "send-email" =>
-          SendEmail(parseId(args(1)))
+        case "get" =>
+          GetCheck(parseId(args(1)))
         case "exit" =>
           System.exit(0)
           nextRequest
