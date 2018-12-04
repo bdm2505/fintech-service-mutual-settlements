@@ -5,6 +5,7 @@ import tinkoff.fintech.service.data.{Check, Client}
 import scala.collection.concurrent.TrieMap
 import scala.concurrent.{ExecutionContext, Future}
 import cats.implicits._
+import cats.syntax.option.catsSyntaxOption
 
 class TrieMapStorage extends Storage[Option] {
   implicit val ec = ExecutionContext.global

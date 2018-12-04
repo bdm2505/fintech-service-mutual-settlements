@@ -3,10 +3,14 @@ package tinkoff.fintech.service.data
 import io.circe.generic.JsonCodec
 
 @JsonCodec
-case class Product(id: Option[Int],
-                   name: String,
-                   cost: Double,
-                   client: Option[Client])
+final case class Product(id: Option[Int],
+                         name: String,
+                         cost: Double,
+                         client: Option[Client]) {
+
+  def connect(client: Client): Product =
+    copy(client = Some(client))
+}
 
 final case class ProductBase(id: Option[Int],
                              name: String,
