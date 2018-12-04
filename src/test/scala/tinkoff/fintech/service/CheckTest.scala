@@ -14,16 +14,11 @@ class CheckTest extends FlatSpec with Matchers {
   }
 
   it should "remove products" in new Milk {
-    (check - "milk").products shouldBe Seq.empty
-  }
-
-  it should "find product" in new Milk {
-    check.find("milk") shouldBe Some(Product(Some(1), "milk", 90, None))
-    check.find("other") shouldBe None
+    (check - Product(Some(1), "milk", 90, None)).products shouldBe Seq.empty
   }
 
   it should "connect client and product" in new Milk {
     val cl = Client(" ", "", None, None)
-    check.connect(cl, "milk").products shouldBe Seq(Product(Some(1), "milk", 90, Some(cl)))
+    check.connect(cl, 1).products shouldBe Seq(Product(Some(1), "milk", 90, Some(cl)))
   }
 }

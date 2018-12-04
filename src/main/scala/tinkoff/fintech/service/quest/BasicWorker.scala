@@ -1,6 +1,6 @@
 package tinkoff.fintech.service.quest
 
-import cats.{Monad, Traverse}
+import cats.Monad
 import cats.implicits._
 import tinkoff.fintech.service.data._
 import tinkoff.fintech.service.email.EmailSender
@@ -36,7 +36,7 @@ class BasicWorker[F[_] : Monad](val storage: Storage[F], val emailSender: EmailS
         for {
           client <- findClient(clientId)
           check <- findCheck(checkId)
-          _ <- updateCheck(check.connect(productId, clientId))
+          _ <- updateCheck(check.connect(client, productId))
         } yield Ok
 
       case SendEmail(checkId) =>

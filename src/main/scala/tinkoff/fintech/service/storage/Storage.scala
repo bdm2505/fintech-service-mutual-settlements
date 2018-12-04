@@ -8,7 +8,6 @@ import scala.concurrent.Future
 
 abstract class Storage[F[_] : Monad](implicit tr: Traverse[List]) {
 
-
   /**
     * @return context with id check
     */
