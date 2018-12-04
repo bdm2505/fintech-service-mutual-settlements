@@ -8,12 +8,14 @@ scalacOptions += "-Ypartial-unification"
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % Test
 
+libraryDependencies += "com.dimafeng" %% "testcontainers-scala" % "0.22.0" % "test"
+libraryDependencies += "org.testcontainers" % "postgresql" % "1.10.2" % Test
+
 libraryDependencies += "com.typesafe.akka" %% "akka-http" % "10.1.5"
 libraryDependencies += "com.typesafe.akka" %% "akka-stream" % "2.5.18"
 libraryDependencies += "com.typesafe" % "config" % "1.3.2"
 
 libraryDependencies += "com.h2database" % "h2" % "1.4.197"
-
 
 val circeVersion = "0.10.1"
 

@@ -111,4 +111,36 @@ class SqlStorage extends Storage[ConnectionIO] {
 
   override def transact[A](context: => ConnectionIO[A]): Future[A] =
     context.transact(transactor).unsafeToFuture()
+
+  def createTables: ConnectionIO[Int] =
+    sql"""
+         CREATE TABLE public.client (
+           id serial NOT NULL,
+           name varchar NOT NULL,
+           email varchar NOT NULL,
+           phone varchar NULL,
+           card_number varchar NULL,
+           CONSTRAINT client_pkey PRIMARY KEY (id)
+         );
+
+         CREATE TABLE public."check" (
+           id serial NOT NULL,
+           "time" timestamp NOT NULL DEFAULT now(),
+           client_id int4 NOT NULL,
+           CONSTRAINT check_pkey PRIMARY KEY (id),
+           CONSTRAINT check_client_fk FOREIGN KEY (client_id) REFERENCES client(id)
+         );
+
+         CREATE TABLE public.product (
+           id serial NOT NULL,
+           name varchar NOT NULL,
+           cost numeric(10,2) NOT NULL,
+           check_id int4 NOT NULL,
+           client_id int4 NULL,
+           CONSTRAINT product_pkey PRIMARY KEY (id),
+           CONSTRAINT product_check_fk FOREIGN KEY (check_id) REFERENCES "check"(id) ON DELETE CASCADE,
+           CONSTRAINT product_client_fk FOREIGN KEY (client_id) REFERENCES client(id)
+         );"""
+      .update
+      .run
 }
