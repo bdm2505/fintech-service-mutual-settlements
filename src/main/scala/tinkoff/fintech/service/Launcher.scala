@@ -1,29 +1,21 @@
 package tinkoff.fintech.service
 
-import com.typesafe.config.{Config, ConfigFactory}
-import tinkoff.fintech.service.data.{Client, Product}
-import tinkoff.fintech.service.email.EmailSender
+import cats.implicits._
+import com.typesafe.config.ConfigFactory
+import tinkoff.fintech.service.email.Sender
 import tinkoff.fintech.service.quest.Worker
 import tinkoff.fintech.service.services.{AkkaHttpService, ConsoleService, Service}
-import tinkoff.fintech.service.storage.{SqlStorage, Storage}
+import tinkoff.fintech.service.storage.Storage
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 import scala.io.StdIn
-import cats.implicits._
-import cats.syntax._
-import doobie.implicits._
 
 object Launcher extends App {
   implicit val ec = ExecutionContext.global
   val config = ConfigFactory.load()
 
   val storage = Storage()
-
-  val emailSender = new EmailSender {
-    override def send(email: String, paidClient: Client, products: Seq[Product]) = Future {
-      println(s"send $email\n  props=$paidClient\n    ${products.mkString("\n    ")}\n  sum cost=${products.map(_.cost).sum}")
-    }
-  }
+  val emailSender = Sender()
 
   val worker = Worker(storage, emailSender)
 
@@ -39,7 +31,9 @@ object Launcher extends App {
 
   services.foreach(_.startWithFuture(worker))
 
-  loadService("console"){ new ConsoleService()}.foreach(_.start(worker))
+  loadService("console") {
+    new ConsoleService()
+  }.foreach(_.start(worker))
 
   StdIn.readLine
   services.foreach(_.stop())

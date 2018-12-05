@@ -3,12 +3,12 @@ package tinkoff.fintech.service.quest
 import cats.Monad
 import cats.implicits._
 import tinkoff.fintech.service.data._
-import tinkoff.fintech.service.email.EmailSender
+import tinkoff.fintech.service.email.Sender
 import tinkoff.fintech.service.storage.Storage
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class BasicWorker[F[_] : Monad](val storage: Storage[F], val emailSender: EmailSender)(implicit ec: ExecutionContext) extends Worker {
+class BasicWorker[F[_] : Monad](val storage: Storage[F], val sender: Sender)(implicit ec: ExecutionContext) extends Worker {
 
   def work(request: Request): Future[Response] = {
     successWork(request)
@@ -53,7 +53,7 @@ class BasicWorker[F[_] : Monad](val storage: Storage[F], val emailSender: EmailS
   }
 
   def sendEmail(check: Check): Future[Seq[Unit]] =
-    emailSender.sendAll(check.noPaidClients.map {
+    sender.sendAll(check.noPaidClients.map {
       case (client, products) => (client.email, check.paidClient, products)
     }.toSeq)
 
