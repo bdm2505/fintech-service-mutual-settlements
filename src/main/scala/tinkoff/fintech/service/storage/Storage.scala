@@ -11,16 +11,16 @@ abstract class Storage[F[_] : Monad](implicit tr: Traverse[List]) {
   /**
     * @return context with id check
     */
-  def saveNewCheck(check: Check): F[Int]
+  def saveNewCheck(check: Check): F[Check]
 
-  def updateCheck(check: => Check): F[Unit]
+  def updateCheck(check: => Check): F[Check]
 
   def findCheck(id: Int): F[Check]
 
   /**
     * @return context with id client
     */
-  def saveNewClient(client: Client): F[Int]
+  def saveNewClient(client: Client): F[Client]
 
   def findClient(id: Int): F[Client]
 

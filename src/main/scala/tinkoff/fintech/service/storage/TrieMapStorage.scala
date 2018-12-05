@@ -22,14 +22,16 @@ class TrieMapStorage extends Storage[Option] {
   /**
     * @return db context with id check
     */
-  override def saveNewCheck(check: Check): Option[Int] = {
+  override def saveNewCheck(check: Check): Option[Check] = {
     val id = nextID
     checks += id -> check.copy(Some(id), check.products.map(_.copy(Some(nextID))))
-    Some(id)
+    findCheck(id)
   }
 
-  override def updateCheck(check: => Check): Option[Unit] =
+  override def updateCheck(check: => Check): Option[Check] = {
     checks.get(check.id.get).map(_ => checks.update(check.id.get, check))
+    findCheck(check.id.get)
+  }
 
   override def findCheck(id: Int): Option[Check] =
     checks.get(id)
@@ -37,10 +39,10 @@ class TrieMapStorage extends Storage[Option] {
   /**
     * @return db context with id client
     */
-  override def saveNewClient(client: Client): Option[Int] = {
+  override def saveNewClient(client: Client): Option[Client] = {
     val id = nextID
     clients += id -> client.copy(Some(id))
-    Some(id)
+    findClient(id)
   }
 
   override def findClient(id: Int): Option[Client] =

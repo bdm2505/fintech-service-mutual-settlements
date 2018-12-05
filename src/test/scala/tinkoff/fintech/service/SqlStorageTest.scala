@@ -10,7 +10,6 @@ import org.scalatest.{AsyncFlatSpec, Matchers}
 import tinkoff.fintech.service.data.{Check, Client, Product}
 import tinkoff.fintech.service.storage.SqlStorage
 
-
 class SqlStorageTest extends AsyncFlatSpec with Matchers with ForAllTestContainer {
 
   override val container = PostgreSQLContainer()
@@ -44,9 +43,8 @@ class SqlStorageTest extends AsyncFlatSpec with Matchers with ForAllTestContaine
   it should "save and find client" in {
     storage.transact {
       for {
-        id <- storage.saveNewClient(client)
-        foundClient <- storage.findClient(id)
-      } yield foundClient shouldBe client
+        savedClient <- storage.saveNewClient(client)
+      } yield savedClient shouldBe client
     }
   }
 
@@ -54,9 +52,8 @@ class SqlStorageTest extends AsyncFlatSpec with Matchers with ForAllTestContaine
   it should "save ans find check" in {
     storage.transact {
       for {
-        id <- storage.saveNewCheck(check)
-        foundCheck <- storage.findCheck(id)
-      } yield foundCheck shouldBe check
+        savedCheck <- storage.saveNewCheck(check)
+      } yield savedCheck shouldBe check
     }
   }
 
@@ -68,4 +65,5 @@ class SqlStorageTest extends AsyncFlatSpec with Matchers with ForAllTestContaine
       } yield foundCheck shouldBe check.connect(client, 1)
     }
   }
+
 }

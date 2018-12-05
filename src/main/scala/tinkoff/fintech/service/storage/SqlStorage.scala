@@ -30,7 +30,7 @@ class SqlStorage extends Storage[ConnectionIO] {
   /**
     * @return context with id check
     */
-  override def saveNewCheck(check: Check): ConnectionIO[Int] = {
+  override def saveNewCheck(check: Check): ConnectionIO[Check] = {
     val time = check.time.map(time => Timestamp.valueOf(time))
 
     def saveCheck =
@@ -44,18 +44,19 @@ class SqlStorage extends Storage[ConnectionIO] {
     }
 
     for {
-      savedCheck <- saveCheck
-      _ <- saveProducts(savedCheck)
-    } yield savedCheck
+      savedCheckId <- saveCheck
+      _ <- saveProducts(savedCheckId)
+      found <- findCheck(savedCheckId)
+    } yield found
   }
 
-  override def updateCheck(check: => Check): ConnectionIO[Unit] = {
+  override def updateCheck(check: => Check): ConnectionIO[Check] = {
     val time = check.time.map(time => Timestamp.valueOf(time))
 
     def saveCheck =
       sql"""UPDATE "check" SET time = $time, client_id = ${check.paidClient.id} WHERE id = ${check.id}"""
         .update
-        .run
+        .withUniqueGeneratedKeys[Int]("id")
 
     def saveProducts(products: Seq[Product]) = {
       val sql = "UPDATE product SET name = ?, cost = ?, client_id = ? WHERE id = ?"
@@ -63,9 +64,10 @@ class SqlStorage extends Storage[ConnectionIO] {
     }
 
     for {
-      _ <- saveCheck
+      savedCheckId <- saveCheck
       _ <- saveProducts(check.products)
-    } yield ()
+      found <- findCheck(savedCheckId)
+    } yield found
   }
 
   override def findCheck(id: Int): ConnectionIO[Check] = {
@@ -98,10 +100,10 @@ class SqlStorage extends Storage[ConnectionIO] {
   /**
     * @return db context with id client
     */
-  override def saveNewClient(client: Client): ConnectionIO[Int] = {
+  override def saveNewClient(client: Client): ConnectionIO[Client] = {
     sql"INSERT INTO client (name, email, phone, card_number) VALUES (${client.name}, ${client.email}, ${client.phone}, ${client.cardNumber})"
       .update
-      .withUniqueGeneratedKeys[Int]("id")
+      .withUniqueGeneratedKeys[Client]("id", "name", "email", "phone", "card_number")
   }
 
   override def findClient(id: Int): ConnectionIO[Client] =

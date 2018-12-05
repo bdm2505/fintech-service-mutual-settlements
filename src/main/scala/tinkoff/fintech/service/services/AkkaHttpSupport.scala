@@ -1,16 +1,13 @@
 package tinkoff.fintech.service.services
 
-import akka.http.scaladsl.marshalling.{Marshaller, ToEntityMarshaller, ToResponseMarshallable}
+import akka.http.scaladsl.marshalling.{Marshaller, ToEntityMarshaller}
 import akka.http.scaladsl.model.MediaTypes.`application/json`
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.unmarshalling.{FromEntityUnmarshaller, Unmarshaller}
 import akka.util.ByteString
 import io.circe._
-import io.circe.syntax._
-import tinkoff.fintech.service.quest.{Fail, Ok, OkCreate, Response}
 
 import scala.collection.immutable.Seq
-import scala.concurrent.Future
 
 /**
   * Automatic to and from JSON marshalling/unmarshalling using an in-scope circe protocol.
