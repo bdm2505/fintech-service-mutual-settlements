@@ -29,12 +29,11 @@ class BasicWorker[F[_] : Monad](val storage: Storage[F], val emailSender: EmailS
       case CreateCheck(products, idPaidClient) =>
         for {
           paidClient <- findClient(idPaidClient)
-          id <- saveNewCheck(Check(products, paidClient))
-          check <- findCheck(id)
-        } yield OkCheck(check.copy(Some(id)))
+          check <- saveNewCheck(Check(products, paidClient))
+        } yield OkCheck(check)
 
       case CreateClient(client) =>
-        saveNewClient(client).map(id => OkCreate(id))
+        saveNewClient(client).map(saved => OkCreate(saved.id.get))
 
       case Connect(checkId, clientId, productId) =>
         for {
