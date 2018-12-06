@@ -36,3 +36,4 @@ libraryDependencies ++= Seq(
 )
 
 libraryDependencies += "com.github.daddykotex" %% "courier" % "1.0.0"
+lazy val root = (project in file(".")).enablePlugins(SbtTwirl)

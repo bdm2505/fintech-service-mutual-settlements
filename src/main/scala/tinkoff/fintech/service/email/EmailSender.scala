@@ -2,6 +2,7 @@ package tinkoff.fintech.service.email
 
 import com.typesafe.config.{Config, ConfigFactory}
 import courier._
+import html.email
 import javax.mail.internet.InternetAddress
 import tinkoff.fintech.service.data._
 
@@ -19,20 +20,10 @@ class EmailSender extends Sender {
     mailer(Envelope.from(new InternetAddress(config.getString("user"), "Сервис взаиморасчетов"))
       .to(email.addr)
       .subject("Ваш чек")
-      .content(Text(formatMessage(paidClient, products))))
+      .content(Multipart().html(formatMessage(paidClient, products))))
   }
 
   def formatMessage(paidClient: Client, products: Seq[Product]): String = {
-    val requisites = List(("Телефон", paidClient.phone), ("Номер карты", paidClient.cardNumber)).filter(_._2.nonEmpty)
-    val productsStr = products.map(p => s"${p.name} \t ${p.cost}").mkString("\n")
-
-    if (requisites.nonEmpty) {
-      val requisitesStr = requisites.map(requisite => s"${requisite._1}: ${requisite._2.get}").mkString("\n")
-      s"""$productsStr
-         |Реквизиты для оплаты:
-         |$requisitesStr
-         |""".stripMargin
-    } else
-      productsStr
+    email.render(paidClient, products).toString()
   }
 }
