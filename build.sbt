@@ -34,3 +34,6 @@ libraryDependencies ++= Seq(
   "org.tpolecat" %% "doobie-postgres" % doobieVersion,
   "org.tpolecat" %% "doobie-specs2" % doobieVersion
 )
+
+libraryDependencies += "com.github.daddykotex" %% "courier" % "1.0.0"
+lazy val root = (project in file(".")).enablePlugins(SbtTwirl)
