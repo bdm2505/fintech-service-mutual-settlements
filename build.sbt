@@ -36,4 +36,9 @@ libraryDependencies ++= Seq(
 )
 
 libraryDependencies += "com.github.daddykotex" %% "courier" % "1.0.0"
+
 lazy val root = (project in file(".")).enablePlugins(SbtTwirl)
+
+libraryDependencies += "com.bot4s" %% "telegram-core" % "4.0.0-RC2"
+
+

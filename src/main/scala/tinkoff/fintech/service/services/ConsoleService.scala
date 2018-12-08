@@ -1,5 +1,6 @@
 package tinkoff.fintech.service.services
 
+import com.typesafe.config.ConfigFactory
 import tinkoff.fintech.service.data.{Client, Product}
 import tinkoff.fintech.service.quest._
 
@@ -9,19 +10,15 @@ import scala.util.Success
 
 class ConsoleService(implicit val ec: ExecutionContext) extends Service {
 
-  var ids = Map.empty[Int, Int]
+
   var num = 1
 
-  override def start(worker: Worker): Unit = {
+  override def start(worker: Worker): Future[Unit] = Future {
     println(help)
     while (true) {
       worker.work(nextRequest).onComplete {
         case Success(response) =>
           response match {
-            case OkCreate(id: Int) =>
-              ids += (num -> id)
-              println(s"ok id = ':$num'")
-              num += 1
             case e =>
               println(e)
           }
@@ -42,7 +39,7 @@ class ConsoleService(implicit val ec: ExecutionContext) extends Service {
 
   def parseId[T](s: String): Int = {
     if (s.startsWith(":"))
-      ids(s.tail.toInt)
+      s.tail.toInt
     else
       s.toInt
   }

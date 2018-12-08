@@ -6,11 +6,7 @@ import scala.concurrent.{ExecutionContext, Future, Promise}
 
 trait Service {
 
-  def start(worker: Worker): Unit
-
-  def startWithFuture(worker: Worker)(implicit ec: ExecutionContext) = Future {
-    start(worker)
-  }
+  def start(worker: Worker): Future[_]
 
   private val stopPromise = Promise[Unit]()
 

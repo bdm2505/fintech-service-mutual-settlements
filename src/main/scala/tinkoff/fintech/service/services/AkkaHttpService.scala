@@ -19,7 +19,7 @@ class AkkaHttpService(val host: String, val port: Int) extends Service {
   implicit val ec = system.dispatcher
 
 
-  override def start(worker: Worker): Unit = {
+  override def start(worker: Worker) = {
 
     def answer[T <: Request : FromRequestUnmarshaller]: Route = post {
       entity(as[T])(request => complete(worker.work(request)))
@@ -46,5 +46,6 @@ class AkkaHttpService(val host: String, val port: Int) extends Service {
       bind.flatMap(_.unbind())
         .onComplete(_ => system.terminate())
     }
+    system.whenTerminated
   }
 }

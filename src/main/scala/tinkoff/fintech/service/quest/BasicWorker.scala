@@ -33,7 +33,7 @@ class BasicWorker[F[_] : Monad](val storage: Storage[F], val sender: Sender)(imp
         } yield OkCheck(check)
 
       case CreateClient(client) =>
-        saveNewClient(client).map(saved => OkCreate(saved.id.get))
+        saveNewClient(client).map(OkClient)
 
       case Connect(checkId, clientId, productId) =>
         for {
@@ -52,9 +52,11 @@ class BasicWorker[F[_] : Monad](val storage: Storage[F], val sender: Sender)(imp
     transact(res)
   }
 
-  def sendEmail(check: Check): Future[Seq[Unit]] =
+  def sendEmail(check: Check): Future[Seq[Unit]] = {
+    println("send Email " + check)
     sender.sendAll(check.noPaidClients.map {
       case (client, products) => (client.email, check.paidClient, products)
     }.toSeq)
+  }
 
 }

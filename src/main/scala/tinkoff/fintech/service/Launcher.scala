@@ -4,10 +4,11 @@ import cats.implicits._
 import com.typesafe.config.ConfigFactory
 import tinkoff.fintech.service.email.Sender
 import tinkoff.fintech.service.quest.Worker
-import tinkoff.fintech.service.services.{AkkaHttpService, ConsoleService, Service}
+import tinkoff.fintech.service.services.{AkkaHttpService, BotTelegramService, ConsoleService, Service}
 import tinkoff.fintech.service.storage.Storage
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.duration.Duration
 import scala.io.StdIn
 
 object Launcher extends App {
@@ -27,15 +28,21 @@ object Launcher extends App {
   val services = Seq(
     loadService("akka") {
       new AkkaHttpService(config.getString("service.akka.host"), config.getInt("service.akka.port"))
+    },
+    loadService("bot-telegram"){
+      new BotTelegramService(config.getConfig("service.bot-telegram"))
+    },
+    loadService("console") {
+      isConsole = true
+      new ConsoleService()
     }).flatten
 
-  services.foreach(_.startWithFuture(worker))
+  val running = services.map(_.start(worker))
 
-  loadService("console") {
-    new ConsoleService()
-  }.foreach(_.start(worker))
-
-  StdIn.readLine
-  services.foreach(_.stop())
-
+  if (!isConsole) {
+    StdIn.readLine
+    services.foreach(_.stop())
+  } else {
+    running.foreach(Await.ready(_, Duration.Inf))
+  }
 }
