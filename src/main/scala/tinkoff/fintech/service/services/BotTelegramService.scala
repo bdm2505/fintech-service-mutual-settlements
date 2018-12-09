@@ -15,7 +15,7 @@ import scala.collection.concurrent.TrieMap
 import scala.concurrent.{ExecutionContext, Future}
 
 
-case class ClientStatus(client: Option[Int] = None, check: Option[Int] = None)
+case class ClientStatus(client: Option[Int] = None, check: Option[Int] = None, position: Option[Map[Int, Int]] = None)
 
 class BotTelegramService(config: Config) extends TelegramBot with Polling with Commands with Service {
   LoggerConfig.factory = PrintLoggerFactory()
@@ -29,7 +29,12 @@ class BotTelegramService(config: Config) extends TelegramBot with Polling with C
 
   val help =
     """
-      |/create name-product-1 cost-product-1 ... name-product-N cost-product-N  - create new check
+      |/srart or /help - show this help
+      |/create name-product-1 cost-product-1 ... name-product-N cost-product-N - create new check
+      |/getLink - show link with id check
+      |/client name email [phone] [card-number] - save data for client
+      |/add name-product-1 cost-product-1 ... name-product-N cost-product-N - add data in check
+      |/choose number-position - choose product
     """.stripMargin
 
 
@@ -42,15 +47,19 @@ class BotTelegramService(config: Config) extends TelegramBot with Polling with C
       case OkClient(cl) => s"client save with id=${cl.id.getOrElse("???")} (${cl.name} ${cl.email})"
       case OkCheck(check) =>
         def id(product: Product): String = product.id.getOrElse("???").toString
+
         def cl(pr: Product): String = pr.client.map(_.name).getOrElse("")
+
         s"""
-           |*check update!*
+           |check update!
            |id = ${check.id.getOrElse("???")}
            |paid = ${check.paidClient.name} (${check.paidClient.email})
            |products:
-           |""".stripMargin + check.products
-          .map(p => s"${id(p)}) ${p.name} ${"-" * (30 - id(p).length - p.name.length - p.cost.toString.length)} ${p.cost} (${cl(p)}) ")
-          .mkString("  ", "\n  ", "\n")
+           |""".stripMargin +
+          check.products.zipWithIndex
+            .map{ case (p, index) => s"${index + 1} ${p.name} ${"--" * (25 - id(p).length - p.name.length - p.cost.toString.length)} ${p.cost} (${cl(p)}) "}
+            .mkString("  ", "\n  ", "\n") +
+          (if (check.full) "check filled, emails sent!" else "")
     }
 
 
@@ -62,7 +71,10 @@ class BotTelegramService(config: Config) extends TelegramBot with Polling with C
           worker.work(request)
             .map {
               case r@OkClient(cl) => map.update(key, status.copy(cl.id)); r
-              case r@OkCheck(ch) => map.update(key, status.copy(check = ch.id)); r
+              case r@OkCheck(ch) => map.update(key, status.copy(check = ch.id, position = Some(
+                1 to ch.products.size zip ch.products.map(_.id.getOrElse(-1)) toMap)))
+                if (ch.full) map.update(key, ClientStatus(status.client))
+                r
               case r => r
             }
             .map(toAnswer)
@@ -103,7 +115,8 @@ class BotTelegramService(config: Config) extends TelegramBot with Polling with C
       for {
         idClient <- status.client
         idCheck <- status.check
-        idProduct = seq.head.toInt if seq.nonEmpty
+        ids <- status.position
+        idProduct <- ids.get(seq.head.toInt) if seq.nonEmpty
       } yield Connect(idCheck, idClient, idProduct)
     }
 

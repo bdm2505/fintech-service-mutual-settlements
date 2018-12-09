@@ -21,9 +21,6 @@ final case class Check(id: Option[Int],
   def ++(ps: Seq[Product]): Check =
     copy(products = products ++ ps)
 
-  def noPaidProducts: Seq[Product] =
-    products.filter(!_.client.contains(paidClient))
-
   def noPaidClients: Map[Client, List[Product]] =
     products
       .filter(_.client.nonEmpty)
@@ -31,11 +28,8 @@ final case class Check(id: Option[Int],
       .groupBy(_._1.get).mapValues(_.map(_._2).toList)
 
   def connect(client: Client, productId: Int): Check = {
-    val (selected, other) = products.partition(_.id.contains(productId))
-    if (selected.isEmpty)
-      this
-    else
-      copy(products = (selected.head connect client) +: other)
+    copy(products = products.map(pr =>
+      if (pr.id contains productId) pr connect client else pr))
   }
 
   def full: Boolean =
@@ -91,15 +85,5 @@ object Check {
   }
 }
 
-object Test extends App {
-
-  val cl = Client("bdm", "yuew", id = Some(1))
-  val check = Check(Some(12), Seq.empty, cl) + Product("milk", 90) + Product(Some(1), "sas", 800, Some(cl))
-
-  println(check.asJson.spaces2)
-
-  println(parser.decode[Check](check.asJson.spaces2))
-
-}
 
 
