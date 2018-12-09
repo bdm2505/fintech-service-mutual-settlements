@@ -1,5 +1,7 @@
 package tinkoff.fintech.service.storage
 
+import java.time.LocalDateTime
+
 import cats.{Monad, Traverse}
 import cats.implicits._
 import tinkoff.fintech.service.data.{Check, Client}
@@ -29,6 +31,23 @@ abstract class Storage[F[_] : Monad](implicit tr: Traverse[List]) {
 
   def transact[A](context: => F[A]): Future[A]
 
+  def sumPerMonth(clientId: Int): F[Map[LocalDateTime, Double]]
+
+  def sumPerWeek(clientId: Int): F[Map[LocalDateTime, Double]]
+
+  def totalProducts(clientId: Int): F[Int]
+
+  def maxSum(clientId: Int): F[Double]
+
+  def minSum(clientId: Int): F[Double]
+
+  def avgSum(clientId: Int): F[Double]
+
+  def maxProducts(clientId: Int): F[Int]
+
+  def minProducts(clientId: Int): F[Int]
+
+  def avgProducts(clientId: Int): F[Int]
 }
 
 object Storage {

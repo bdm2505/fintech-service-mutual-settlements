@@ -1,6 +1,7 @@
 package tinkoff.fintech.service.storage
 
 import java.sql.Timestamp
+import java.time.LocalDateTime
 
 import cats.effect.{ContextShift, IO}
 import cats.implicits._
@@ -77,7 +78,7 @@ class SqlStorage extends Storage[ConnectionIO] {
            FROM product
            LEFT JOIN client ON client.id = client_id
            WHERE check_id = $checkId
-           """
+         """
         .query[(Option[Int], String, Double, Option[Int], Option[String], Option[String], Option[String], Option[String])]
         .to[Seq]
         .map(_.map {
@@ -114,6 +115,80 @@ class SqlStorage extends Storage[ConnectionIO] {
   override def transact[A](context: => ConnectionIO[A]): Future[A] =
     context.transact(transactor).unsafeToFuture()
 
+  override def sumPerMonth(clientId: Int): ConnectionIO[Map[LocalDateTime, Double]] =
+    sumPer(clientId, "month")
+
+  override def sumPerWeek(clientId: Int): ConnectionIO[Map[LocalDateTime, Double]] =
+    sumPer(clientId, "week")
+
+  private def sumPer(clientId: Int, period: String): ConnectionIO[Map[LocalDateTime, Double]] =
+    sql"""
+         SELECT date_trunc($period, "check"."time"), SUM(product.cost)
+         FROM product
+         LEFT JOIN "check" ON product.check_id = "check".id
+         WHERE product.client_id = $clientId
+         GROUP BY 1
+         ORDER BY 1
+       """
+      .query[(Timestamp, Double)]
+      .to[Seq]
+      .map(seq => seq.map(tuple => (tuple._1.toLocalDateTime, tuple._2)).toMap)
+
+  override def totalProducts(clientId: Int): ConnectionIO[Int] =
+    sql"SELECT COUNT(*) FROM product WHERE client_id = $clientId"
+      .query[Int]
+      .unique
+
+  override def maxSum(clientId: Int): ConnectionIO[Double] =
+    sum(clientId, "MAX")
+
+  override def minSum(clientId: Int): ConnectionIO[Double] =
+    sum(clientId, "MIN")
+
+  override def avgSum(clientId: Int): ConnectionIO[Double] =
+    sum(clientId, "AVG")
+
+  private def sum(clientId: Int, op: String): ConnectionIO[Double] = {
+    val sql =
+      s"""
+         |SELECT $op(s) FROM (
+         |  SELECT SUM(product.cost) AS s
+         |  FROM product
+         |  LEFT JOIN "check" ON product.check_id = "check".id
+         |  WHERE product.client_id = $clientId
+         |  GROUP BY check_id
+         |) q
+       """.stripMargin
+    Query0[Option[Double]](sql, None)
+      .unique
+      .map(_.getOrElse(0))
+  }
+
+  override def maxProducts(clientId: Int): ConnectionIO[Int] =
+    products(clientId, "MAX")
+
+  override def minProducts(clientId: Int): ConnectionIO[Int] =
+    products(clientId, "MIN")
+
+  override def avgProducts(clientId: Int): ConnectionIO[Int] =
+    products(clientId, "AVG")
+
+  private def products(clientId: Int, op: String): ConnectionIO[Int] = {
+    val sql =
+      s"""
+         |SELECT $op(s) FROM (
+         |  SELECT COUNT(*) AS s
+         |  FROM product
+         |  LEFT JOIN "check" ON product.check_id = "check".id
+         |  WHERE product.client_id = $clientId
+         |  GROUP BY check_id
+         |) q
+       """.stripMargin
+    Query0[Option[Int]](sql, None)
+      .unique
+      .map(_.getOrElse(0))
+  }
+
   def createTables: ConnectionIO[Int] =
     sql"""
          CREATE TABLE public.client (
@@ -142,7 +217,17 @@ class SqlStorage extends Storage[ConnectionIO] {
            CONSTRAINT product_pkey PRIMARY KEY (id),
            CONSTRAINT product_check_fk FOREIGN KEY (check_id) REFERENCES "check"(id) ON DELETE CASCADE,
            CONSTRAINT product_client_fk FOREIGN KEY (client_id) REFERENCES client(id)
-         );"""
+         );
+       """
+      .update
+      .run
+
+  def dropTables: ConnectionIO[Int] =
+    sql"""
+         DROP TABLE product;
+         DROP TABLE "check";
+         DROP TABLE client;
+       """
       .update
       .run
 }
