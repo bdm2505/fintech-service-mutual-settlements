@@ -47,6 +47,10 @@ class BasicWorker[F[_] : Monad](val storage: Storage[F], val sender: Sender)(imp
         for {
           check <- findCheck(id)
         } yield OkCheck(check)
+      case GetSumRerMonth(id) =>
+        for {
+          map <- sumPerMonth(id)
+        } yield OkSumPerMouth(map.map{case (k, v) => k.toString -> v})
 
     }
     transact(res)

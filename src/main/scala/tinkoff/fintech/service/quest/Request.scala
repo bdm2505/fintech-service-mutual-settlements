@@ -30,4 +30,6 @@ final case class Connect(checkId: Int, clientId: Int, productId: Int) extends Re
 @JsonCodec
 final case class GetCheck(id: Int) extends Request
 
+@JsonCodec
+final case class GetSumRerMonth(id: Int) extends Request
 

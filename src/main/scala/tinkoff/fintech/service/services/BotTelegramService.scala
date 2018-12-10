@@ -60,6 +60,8 @@ class BotTelegramService(config: Config) extends TelegramBot with Polling with C
             .map{ case (p, index) => s"${index + 1} ${p.name} ${"--" * (25 - id(p).length - p.name.length - p.cost.toString.length)} ${p.cost} (${cl(p)}) "}
             .mkString("  ", "\n  ", "\n") +
           (if (check.full) "check filled, emails sent!" else "")
+      case OkSumPerMouth(map) =>
+        map.mkString("\n")
     }
 
 
@@ -118,6 +120,11 @@ class BotTelegramService(config: Config) extends TelegramBot with Polling with C
         ids <- status.position
         idProduct <- ids.get(seq.head.toInt) if seq.nonEmpty
       } yield Connect(idCheck, idClient, idProduct)
+    }
+    answer('getStats){ case (status, seq) =>
+      status.client.map { id => GetSumRerMonth(id) }
+
+
     }
 
   }
