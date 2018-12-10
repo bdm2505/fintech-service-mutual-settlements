@@ -122,7 +122,7 @@ class BotTelegramService(config: Config) extends TelegramBot with Polling with C
       } yield Connect(idCheck, idClient, idProduct)
     }
     answer('getStats){ case (status, seq) =>
-      status.client.map { id => GetSumRerMonth(id) }
+      if (seq.isEmpty) None else Some(GetSumRerMonth(seq.head.toInt))
 
 
     }
